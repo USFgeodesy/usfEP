@@ -9,12 +9,15 @@ Utilites for calculating pole
 ll2geocentric : 
     - convert lat lon to geocentric coordinates
 
+ll2local:
+    -convert lon to local coordinate system 
+
 @author: Nick Voss
 nvoss@mail.usf.edu
 """
 import numpy as np 
 
-def ll2geocentric(latitude,longitude):
+def ll2geocentric(longitude,latitude):
     '''
     inputs:
         latitude: latitude of GPS station
@@ -30,8 +33,9 @@ def ll2geocentric(latitude,longitude):
     Rz = Re*np.sin(rLat)
     return [Rx,Ry,Rz]
 
-def ll2local(lat,lon):
+def ll2local(lon,lat):
     '''
+    Compute the local coordinate vectors 
     inputs:
         lat: latitude of gps
         lon: longitude of gps
@@ -41,22 +45,44 @@ def ll2local(lat,lon):
         - east
         - up
     '''
-    Re = 6371.0 #radius of the earth in km
-    rLat = np.radians(latitude)
-    rLon = np.radians(longitude)
-    n = -np.sin(rLat)*np.cos(rLon)
-    e = -np.sin(rLat)*np.sin(rLon)
-    u = np.cos(rLon)
-    return n,e,u
+    rLat = np.radians(lat)
+    rLon = np.radians(lon)
+    n = [-np.sin(rLat)*np.cos(rLon),-np.sin(rLat)*np.sin(rLon),np.cos(rLat)]
+    e = [-np.sin(rLon),np.cos(rLon),0]
+    u = [np.cos(rLat)*np.cos(rLon),np.cos(rLat)*np.sin(rLon),np.sin(rLat)]
+    return [e,n,u]
     
     
-def velocities(omega,R):
+def vPole2local(V,n,e,u):
     '''
-    calculate the velcity at a postion on the earth service
+    calculate the velocity at a postion on the earth service
     inputs:
-        omega: euler vector
-        R: position vecor
+        V: euler vector
+        n: north vector for local coordinate system
+        e: east vector for local coordinate system 
+        u: up vector for local coordinate system 
     '''
+    Vn = np.dot(V,n)
+    Ve = np.dot(V,e)
+    Vu = np.dot(V,u)
+    if np.allclose(Vu,0.0)!=True:
+        print 'Warning Vu should be 0, can not move off of sphere! Vu :',Vu
+    return Vn,Ve,Vu
+
+def euler2sphere(lon,lat,mag):
+    omegaX = mag*np.cos(np.radians(
+    lat))*np.cos(np.radians(lon))
+    omegaY= mag*np.cos(np.radians(lat))*np.sin(np.radians(lon))
+    omegaZ = mag*np.sin(np.radians(lat))
+    return [omegaX,omegaY,omegaZ]
+
+def geocentricUnitVector(latitude,longitude):
+    X = np.cos(np.radians(latitude))*np.cos\
+        (np.radians(longitude))
+    Y = np.cos(np.radians(latitude))*np.sin\
+        (np.radians(longitude))
+    Z = np.sin(np.radians(latitude))
+    return(X,Y,Z)   
     
 
-
+    
