@@ -23,7 +23,7 @@ def ll2geocentric(longitude,latitude):
         latitude: latitude of GPS station
         longitude: longitude of GPS station
     returns:
-        geocentirc vector: vector describing gps position in geocentric coordinates
+        geocentric vector: vector describing gps position in geocentric coordinates
     '''
     Re = 6371.0 #radius of the earth in km
     rLat = np.radians(latitude)
@@ -48,7 +48,7 @@ def ll2local(lon,lat):
     rLat = np.radians(lat)
     rLon = np.radians(lon)
     n = [-np.sin(rLat)*np.cos(rLon),-np.sin(rLat)*np.sin(rLon),np.cos(rLat)]
-    e = [-np.sin(rLon),np.cos(rLon),0]
+    e = [-np.sin(rLon),np.cos(rLon),0.0]
     u = [np.cos(rLat)*np.cos(rLon),np.cos(rLat)*np.sin(rLon),np.sin(rLat)]
     return [e,n,u]
     
@@ -70,8 +70,10 @@ def vPole2local(V,n,e,u):
     return Vn,Ve,Vu
 
 def euler2sphere(lon,lat,mag):
-    omegaX = mag*np.cos(np.radians(
-    lat))*np.cos(np.radians(lon))
+    '''
+    compute the euler vector components in spherical coordinates
+    '''
+    omegaX = mag*np.cos(np.radians(lat))*np.cos(np.radians(lon))
     omegaY= mag*np.cos(np.radians(lat))*np.sin(np.radians(lon))
     omegaZ = mag*np.sin(np.radians(lat))
     return [omegaX,omegaY,omegaZ]
@@ -83,6 +85,23 @@ def geocentricUnitVector(latitude,longitude):
         (np.radians(longitude))
     Z = np.sin(np.radians(latitude))
     return(X,Y,Z)   
-    
+
+def sphere2latlon(X,Y,Z):
+    '''
+    inputs:
+        X : omegaX
+        Y : omegaY
+        Z : omegaZ
+    return lon,lat,magnitude (in degrees/Myr)
+    '''
+    latitude = np.degrees(np.arctan2(Z,np.sqrt(X**2 + Y**2)))
+
+    longitude = np.degrees(np.arctan2(Y,X))
+    #if X < 0.0 :
+        #longitude = -180.0 + longitude 
+    if longitude < 0.0:
+        longitude = 360+longitude
+    angularVelocity = np.degrees(np.sqrt(X**2 + Y**2 + Z**2))
+    return longitude,latitude,angularVelocity
 
     

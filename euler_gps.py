@@ -104,9 +104,9 @@ class network:
             G[i,0] = np.cross(R,lc[0])[0] #e 
             G[i,1] = np.cross(R,lc[0])[1] #e
             G[i,2] = np.cross(R,lc[0])[2] #e
-            G[i+len(self.stations),0] = np.cross(R,lc[1])[0] #n 
-            G[i+len(self.stations),1] = np.cross(R,lc[1])[1] #n
-            G[i+len(self.stations),2] = np.cross(R,lc[1])[2] #n            
+            G[i+len(self.stations)][0] = np.cross(R,lc[1])[0] #n 
+            G[i+len(self.stations)][1] = np.cross(R,lc[1])[1] #n
+            G[i+len(self.stations)][2] = np.cross(R,lc[1])[2] #n            
         return G 
         
     def invert(self):
@@ -137,27 +137,23 @@ class network:
         G = self.genG()
         gFrame = pd.DataFrame(G,index = ind, columns = ['X','Y','Z'])
         grns_fnc = greenfnc('Euler Pole',gFrame)
+        # add greens function and observations to network object
         self.Obs = Obs
         self.G = grns_fnc
         angV = invert_methods.LeastSquares(grns_fnc,Obs)
+        #extract components of angular velocity
         X = angV[0]
         Y = angV[1]
         Z = angV[2]
-        modelE = euler2sphere(109.81,-63.67,0.681)
-        model = np.dot(G,modelE)
+        #compute the modeled displacements
+        model = np.dot(G,[X,Y,Z])
+        #calculate the residual 
         residual = V-model
-        print residual
-        print 'AVE :', np.mean(np.abs(residual))
-        latitude = np.degrees(np.arctan(Z/np.sqrt(X**2 + Y**2)))
-
-        longitude = np.degrees(np.arctan(Y/X))
-        if X < 0.0 :
-            longitude = -180.0 + longitude 
-        if longitude < 0.0:
-            longitude = 360+longitude
-        angularVelocity = np.sqrt(X**2 + Y**2 + Z**2)
+        longitude,latitude,angularVelocity = sphere2latlon(X,Y,Z)
         print 'Lat,Lon,AngV (deg/Myr) :',latitude,longitude,angularVelocity 
         ePole = pole([longitude,latitude],angularVelocity,angV,model)
+        print 'AVE Residual :', np.mean(np.abs(residual))
+        #add modeled displacements to network object 
         self.modeled = model
         return ePole
         
