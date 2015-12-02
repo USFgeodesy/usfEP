@@ -17,7 +17,9 @@ from euler_pole import pole
 from pjInvert import * 
 import numpy as np 
 import pandas as pd 
+import copy 
 from mpl_toolkits.basemap import Basemap
+import itertools
 
 class station:
     '''
@@ -132,7 +134,8 @@ class network:
             else:
                 covariance.append(self.stations[i-len(self.stations)].covariance[1])
         w = pd.Series(covariance,index = ind)
-        Obs = data(S,w)
+        #add weights inversely proportional to the covariance
+        Obs = data(S,(1.0/w))
         # set up Greens function matrix as pjInvert G object 
         G = self.genG()
         gFrame = pd.DataFrame(G,index = ind, columns = ['X','Y','Z'])
@@ -140,7 +143,7 @@ class network:
         # add greens function and observations to network object
         self.Obs = Obs
         self.G = grns_fnc
-        angV = invert_methods.LeastSquares(grns_fnc,Obs)
+        angV = invert_methods.weightedLeastSquares(grns_fnc,Obs)
         #extract components of angular velocity
         X = angV[0]
         Y = angV[1]
@@ -156,6 +159,22 @@ class network:
         #add modeled displacements to network object 
         self.modeled = model
         return ePole
+        
+    def jackknife(self):
+        '''
+        preform jackknife test for pole unvertianty 
+        go through all netwrok comonations and reinverting
+        
+        returns list of poles
+        '''
+        polesList = []
+        for i in range(2,len(self.stations)):
+            t = list(set(itertools.combinations(self.stations,i)))
+            for combo in t:
+                net2 = copy.deepcopy(self)
+                net2.stations = combo
+                polesList.append(net2.invert())    
+        return polesList
         
 def txt2network(fname,name):
     '''
