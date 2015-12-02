@@ -45,5 +45,5 @@ class pole:
         # draw the edge of the map projection region (the projection limb)
         map.drawmapboundary(fill_color='aqua')
         # draw lat/lon grid lines every 30 degrees
-        map.scatter(self.location[0],self.location[1],latlon = True,marker = '*', size = 20)
+        map.scatter(self.location[0],self.location[1],latlon = True,marker = '*',s = 20)
         plt.show()

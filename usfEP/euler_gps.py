@@ -20,6 +20,7 @@ import pandas as pd
 import copy 
 from mpl_toolkits.basemap import Basemap
 import itertools
+import matplotlib.pylab as plt
 
 class station:
     '''
@@ -159,16 +160,7 @@ class network:
         #add modeled displacements to network object 
         self.modeled = model
         return ePole
-    def jackknife(self):
-        '''
-        use the jacknife method to calculate station importance
-        and pole inversion stability
-        
-        removes each station one at a time and reinvert
-        '''
-        return
-        
-        
+
     def jackknife(self):
         '''
         preform jackknife test for pole unvertianty 
